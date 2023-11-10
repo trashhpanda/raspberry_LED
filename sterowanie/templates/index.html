@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>LED Control</title>
+</head>
+<body>
+    <div>
+    <h1>LED Control</h1>
+    <p id="status">Status: Unknown</p>
+    <button id="toggleBtn" onclick="toggleLed()">Toggle LED</button>
+    </div>
+
+    <div>
+        <h1>RGB LED Color</h1>
+        <div class="slidercontainer" style="display: inline-block;">
+            <label for="red" style="color: darkred;">Red: <b id="red_val"></b></label>
+            <br>
+            <input type="range" min="1" max="100" value="50" class="slider" id="red">
+        </div>
+
+        <div class="slidercontainer" style="display: inline-block;">
+            <label for="green" style="color: darkgreen;">Green: <b id="green_val"></b></label>
+            <br>
+            <input type="range" min="1" max="100" value="50" class="slider" id="green">
+        </div>
+
+        <div class="slidercontainer" style="display: inline-block;">
+            <label for="blue" style="color: darkblue;">Blue: <b id="blue_val"></b></label>
+            <br>
+            <input type="range" min="1" max="100" value="50" class="slider" id="blue">
+        </div>
+    </div>
+
+
+
+    <script>
+        // js do czerwonej diody
+        function toggleLed() {
+            var toggleBtn = document.getElementById('toggleBtn');
+            toggleBtn.disabled = true;
+
+            fetch('/led/toggle')
+                .then(response => response.json())
+                .then(data => {
+                    var status = document.getElementById('status');
+                    if (data.success) {
+                        status.innerText = 'Status: ' + data.status;
+                    } else {
+                        status.innerText = 'Status: Error';
+                    }
+
+                    toggleBtn.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    toggleBtn.disabled = false;
+                });
+        }
+
+        // js do RGB
+        var red_slider = document.getElementById("red");
+        var red_output = document.getElementById("red_val");
+        red_output.innerHTML = red_slider.value;
+
+        var green_slider = document.getElementById("green");
+        var green_output = document.getElementById("green_val");
+        green_output.innerHTML = green_slider.value;
+
+        var blue_slider = document.getElementById("blue");
+        var blue_output = document.getElementById("blue_val");
+        blue_output.innerHTML = blue_slider.value;
+
+        var sliders = [red_slider, green_slider, blue_slider];
+
+        function changeRGB(){
+            var data = {
+                red: red_slider.value,
+                green: green_slider.value,
+                blue: blue_slider.value
+            };
+            fetch('/rgb', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Response:', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        sliders.forEach(function(element) {
+            element.onmouseup = function() {
+                sliders.forEach(function(e) {
+                    e.disabled = true;
+                });
+                changeRGB();
+                sliders.forEach(function(e) {
+                    e.disabled = false;
+                });
+            }
+        });
+
+        red_slider.oninput = function() {
+            red_output.innerHTML = this.value;
+        }
+
+
+        green_slider.oninput = function() {
+            green_output.innerHTML = this.value;
+        }
+
+        blue_slider.oninput = function() {
+            blue_output.innerHTML = this.value;
+        }
+    </script>
+</body>
+</html>
